@@ -6,9 +6,16 @@
 /BigTest/SymExec/bin
 /BigTest/UDFExtractor/bin
 /BigTest/Rundir/
+/BigTest/runs/
 /BigTest/BenchmarksFault/bin
 *.class
 *.csv
 /newbench/config/tpcds
+/newbench/geninputs/
 
 /.scala-build/
+# JVM crash logs
+hs_err_pid*.log
+# stray solver/run artifacts written into source trees
+/BigTest/BenchmarksFault/src/**/*.smt
+.DS_Store
