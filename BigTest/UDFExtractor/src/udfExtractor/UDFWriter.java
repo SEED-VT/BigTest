@@ -215,8 +215,14 @@ public class UDFWriter {
         // body_str = body_str.replaceAll("\\QPredef$.MODULE$.augmentString\\E" , "");
         // body_str = body_str.replaceAll("\\QStringOps\\E" , "String");
         // body_str = body_str.replaceAll("\\(\\(new StringOps\\(Predef\\$\\.MODULE\\$\\.augmentString\\(([^)]*?)\\)\\)\\)\\.toInt\\(\\)\\)", "Integer.parseInt($1)");
-        body_str = body_str.replace("(new StringOps(Predef$.MODULE$.augmentString(", "Integer.parseInt(");
-        body_str = body_str.replace("))).toInt()", ")");
+        if (Configuration.DECOMPILER.equals("cfr")) {
+            // CFR omits jad's explicit parens around `new StringOps(...)`, so the
+            // fixed-paren replace below won't match. Use a balanced-paren rewrite.
+            body_str = rewriteStringOpsToInt(body_str);
+        } else {
+            body_str = body_str.replace("(new StringOps(Predef$.MODULE$.augmentString(", "Integer.parseInt(");
+            body_str = body_str.replace("))).toInt()", ")");
+        }
         // ((new StringOps(Predef$.MODULE$.augmentString(str))).toInt()) -> Integer.parseInt($1)
 
         for (Object par : fs.parameters) {
@@ -237,6 +243,40 @@ public class UDFWriter {
         // @thaddywu: add new replacement
         body_str = tupleRenaming(body_str);
         return s + body_str;
+    }
+
+    // Rewrite `[(]new StringOps(Predef$.MODULE$.augmentString(X))[)].toInt()[)]` to
+    // `Integer.parseInt(X)`, tolerant of the surrounding parens jad has but CFR omits.
+    // Scans for the matching close-paren of augmentString so X may itself contain
+    // parens (e.g. s.split(",")[1]).
+    private String rewriteStringOpsToInt(String s) {
+        final String MARK = "new StringOps(Predef$.MODULE$.augmentString(";
+        int idx;
+        while ((idx = s.indexOf(MARK)) >= 0) {
+            int xStart = idx + MARK.length();
+            int depth = 1, i = xStart;
+            for (; i < s.length() && depth > 0; i++) {
+                char c = s.charAt(i);
+                if (c == '(') depth++;
+                else if (c == ')') { depth--; if (depth == 0) break; }
+            }
+            String x = s.substring(xStart, i); // inner expression
+            int toInt = s.indexOf(".toInt()", i);
+            if (toInt < 0) break; // not the expected shape; avoid infinite loop
+            int regionStart = idx;
+            int regionEnd = toInt + ".toInt()".length();
+            // Only strip a wrapping `( ... )` when BOTH parens are present (the jad
+            // shape `(new StringOps(...).toInt())`). Never grab a lone preceding `(`
+            // that belongs to an enclosing expression, e.g. the grouping in
+            // `(int)(a.toInt() / b.toInt())`.
+            if (regionStart > 0 && s.charAt(regionStart - 1) == '('
+                    && regionEnd < s.length() && s.charAt(regionEnd) == ')') {
+                regionStart--;
+                regionEnd++;
+            }
+            s = s.substring(0, regionStart) + "Integer.parseInt(" + x + ")" + s.substring(regionEnd);
+        }
+        return s;
     }
 
     HashMap<String, String> replacements = new HashMap<>();

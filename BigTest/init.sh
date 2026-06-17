@@ -11,7 +11,7 @@ dependencies=$dependencies:$BigTest/UDFExtractor/bin/*
 declare -A binpath
 BenchmarksFault=`realpath $BigTest/BenchmarksFault/bin/`
 binpath["l2"]=${BenchmarksFault}/pigmixl2/L2$
-binpath["wordcount"]=${BenchmarksFault}/pigmixl2/wordcount/WordCount$
+binpath["wordcount"]=${BenchmarksFault}/wordcount/WordCount$
 binpath["movieratings"]=${BenchmarksFault}/movieratings/MovieRatingsCount$
 binpath["income"]=${BenchmarksFault}/incomeaggregate/IncomeAggregate$
 #binpath["trainsit"]=${BenchmarksFault}/airporttransit/AirportTransit$
@@ -25,6 +25,15 @@ binpath["airport"]=${NewBench}/airport/airport$
 binpath["usedcars"]=${NewBench}/usedcars/usedcars$
 binpath["transit"]=${NewBench}/transit/transit$
 binpath["credit"]=${NewBench}/credit/credit$
+
+# Paper demos (faithful reproductions of the worked examples)
+binpath["gradebook"]=${NewBench}/gradebook/gradebook$    # ICSE 2020 demo, Fig. 2
+binpath["commutetrips"]=${NewBench}/commutetrips/commutetrips$  # FSE 2019, Fig. 2 (Alice/Palms)
+
+# Additional benchmarks
+binpath["weblog"]=${NewBench}/weblog/weblog$            # flatMap + reduceByKey (log events)
+binpath["sales"]=${NewBench}/sales/sales$              # join + reduceByKey (revenue per category)
+binpath["temps"]=${NewBench}/temps/temps$              # parse + filter + reduceByKey
 #binpath["movie2"]=${NewBench}/movie2$
 #binpath["grades"]=${NewBench}/grades$
 # binpath["b"]=${NewBench}/b$ # 3 tables

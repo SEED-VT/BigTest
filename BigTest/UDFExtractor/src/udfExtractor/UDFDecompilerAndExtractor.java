@@ -133,11 +133,65 @@ public class UDFDecompilerAndExtractor extends Logging {
             loginfo(LogType.INFO, "Deleting file " + jad_file + " ...");
             new File(jad_file).delete();
         }
-        String[] args = new String[]{"jad", "-o", "-d", jpfdir, classfile + ".class"};
-        // @thaddywu: -d specifys the output dir,
-        // -o: silent overwrite
-        runCommand(args);
-        parse(readFileToString(jad_file), jpfdir);
+        if (Configuration.DECOMPILER.equals("cfr")) {
+            // CFR writes Java source to stdout; capture it (newlines preserved) to
+            // the same .jad path the jad path uses, then normalize CFR-isms before
+            // feeding the Eclipse-JDT parser.
+            decompileWithCFR(jad_file);
+            parse(normalizeCFR(readFileToString(jad_file)), jpfdir);
+        } else {
+            String[] args = new String[]{"jad", "-o", "-d", jpfdir, classfile + ".class"};
+            // @thaddywu: -d specifys the output dir,
+            // -o: silent overwrite
+            runCommand(args);
+            parse(readFileToString(jad_file), jpfdir);
+        }
+    }
+
+    // Decompile classfile with CFR and write its (multi-line) Java source to out.
+    public void decompileWithCFR(String out) throws Exception {
+        String[] cmd = {"java", "-jar", Configuration.CFR_JAR, classfile + ".class"};
+        loginfo(LogType.INFO, "Running CFR: " + String.join(" ", cmd));
+        Process p = Runtime.getRuntime().exec(cmd);
+        StringBuilder src = new StringBuilder();
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+            String line;
+            while ((line = in.readLine()) != null) src.append(line).append('\n');
+        }
+        // drain stderr so the process does not block
+        try (BufferedReader err = new BufferedReader(new InputStreamReader(p.getErrorStream()))) {
+            while (err.readLine() != null) { /* ignore */ }
+        }
+        p.waitFor();
+        try (java.io.FileWriter fw = new java.io.FileWriter(out)) {
+            fw.write(src.toString());
+        }
+    }
+
+    // Bring CFR output into the shape the SparkProgramVisitor/UDFWriter expect from
+    // jad. The UDF body is taken from the JDT AST's toString(), so only *semantic*
+    // AST differences matter; the two that survive are:
+    //   1. CFR emits generic type arguments (Tuple2<String,Object>) where jad emits
+    //      raw types. Strip them. We exploit that decompilers write type arguments
+    //      with NO space before '<' (Tuple2<...>, RDD<...>), whereas comparisons are
+    //      spaced (a < b), so an identifier immediately followed by <...> is a generic.
+    //   2. CFR inserts functional-interface casts ((Function1)/(Function2)) before the
+    //      anonymous UDF classes; drop them.
+    public String normalizeCFR(String src) {
+        String prev;
+        do { // iterate to peel nested generics from the inside out
+            prev = src;
+            src = src.replaceAll("([A-Za-z0-9_$\\]])<[^<>]*>", "$1");
+        } while (!src.equals(prev));
+        // Drop the functional-interface casts CFR puts before anonymous UDF classes,
+        // and the (Object) erasure casts it puts on tuple constructor args (jad emits
+        // neither). Keep (String)/(int) casts: UDFWriter relies on them to type tuple
+        // elements.
+        src = src.replaceAll("\\((?:Function1|Function2|Function3|Ordering|Object)\\)", " ");
+        // CFR qualifies nested local-function calls with `this.` (e.g. this.getDiff$1(..)),
+        // which is illegal in the static UDF methods we extract. jad omits it.
+        src = src.replaceAll("\\bthis\\.", "");
+        return src;
     }
 
     public void runCommand(String[] args) {

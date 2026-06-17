@@ -18,6 +18,15 @@ public class Configuration extends Logging  {
     // static String Rundir =  "/mnt/ssd/thaddywu/bigTest/BigTest/Rundir/";
     static String BigTest = System.getenv("BigTest") ;
     static String Rundir = BigTest + "/Rundir/";
+
+    // Decompiler selection. Default `jad` (the bundled 2001 tool that imposes a
+    // class-file-version ceiling and emits raw `JVM INSTR` on patterns it cannot
+    // handle). Set BIGTEST_DECOMPILER=cfr to use CFR instead - a maintained,
+    // pure-JVM decompiler (dependencies/cfr.jar) that has no native binary and
+    // produces cleaner, generics-aware Java.
+    static String DECOMPILER =
+        System.getenv("BIGTEST_DECOMPILER") == null ? "jad" : System.getenv("BIGTEST_DECOMPILER");
+    static String CFR_JAR = BigTest + "/../dependencies/cfr.jar";
     // static String BenchBin = BigTest + "BenchmarksFault/bin/"; 
     // static String PYTHON_PATH = "/Users/malig/workspace/up_jpf/z3/build/python";
 

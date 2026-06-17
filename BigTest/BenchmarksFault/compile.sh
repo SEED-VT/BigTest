@@ -1,13 +1,13 @@
-compile_scala() {
-    #export SCALA_HOME=$HOME/.bin/scala-2.11.12
-    #export PATH=$SCALA_HOME/bin:$PATH
-    #scalac -version
-    echo Compiling scala programs, target jvm 1.5 # compatible with jad.
-    scalac -target:jvm-1.5 -d bin \
-        src/movie/*.scala src/utils/*.scala
-    #    src/**/*.scala src/TestSuiteRunner.scala
-    #src/utils/SparkRDDGenerator.scala \
-    #src/commutetype/CommuteTypeFaultWrongJoin.scala outerjoin Option[Int].get
-}
+#!/usr/bin/env bash
+# Compile the original FSE-2019 benchmark suite (with seeded faults) to bytecode.
+# Target jvm-1.5 so the bundled jad decompiler can read the class files.
+set -e
+shopt -s globstar nullglob
+cd "$(dirname "${BASH_SOURCE[0]}")"
 
-compile_scala
+echo "Compiling BenchmarksFault scala programs (target jvm 1.5, jad-compatible)"
+rm -rf bin
+mkdir -p bin
+scalac -target:jvm-1.5 -d bin -cp "$CLASSPATH" src/**/*.scala
+echo "Done. Objects under bin/:"
+ls bin

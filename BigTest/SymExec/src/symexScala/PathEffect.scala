@@ -268,8 +268,15 @@ class PathEffect(pc: Constraint, udfEffect: ArrayBuffer[Tuple2[SymVar, Expr]]) {
     val filename = "/tmp/" + content.hashCode() + ".smt2";
     writeTempSMTFile(filename, content);
 
-    var s = "cvc5 < " + filename
-    // var s = "z3 " + filename
+    // Solver is configurable so a newer cvc5 or Z3 can be dropped in on a real
+    // Linux host. BIGTEST_SOLVER is the full invocation prefix; the SMT2 query is
+    // fed on stdin. Default `cvc5` resolves to dependencies/cvc5 (1.0.5), the
+    // build that runs under Apple-Silicon amd64 emulation (newer cvc5 binaries
+    // hit "Illegal instruction" there). Examples for a real Linux box:
+    //   BIGTEST_SOLVER="cvc5 --strings-exp --lang smt2"
+    //   BIGTEST_SOLVER="z3 -in -smt2"
+    val solver = sys.env.getOrElse("BIGTEST_SOLVER", "cvc5")
+    var s = solver + " < " + filename
 
     if (debug_mode) println(s)
     try {

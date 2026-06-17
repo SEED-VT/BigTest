@@ -16,6 +16,8 @@ object ComparisonOp extends Enumeration {
   val Notequals = Value("notequals")
   val isIn = Value("isIn")
   val isNotIn = Value("isNotIn")
+  val StartsWith = Value("startswith")
+  val NotStartsWith = Value("notstartswith")
 
   //def isComparisonOp(s: String): Boolean = values.exists(_.toString == s)
 }
@@ -210,6 +212,11 @@ class Clause(left: Expr, op: ComparisonOp = null, right: Expr = null) {
 
       if (compOp == Notequals || compOp == Inequality) {
         return s""" (not (=  ${leftstr} ${rightstr} ))"""
+      } else if (compOp == StartsWith) {
+        // x.startsWith(p)  <=>  p is a prefix of x  (left = receiver x, right = prefix p)
+        return s"""(str.prefixof ${rightstr} ${leftstr} )"""
+      } else if (compOp == NotStartsWith) {
+        return s""" (not (str.prefixof ${rightstr} ${leftstr} ))"""
       } else {
         //Z3 -- > Assertion (assert (> x 2))
         //  if(leftExpr.isInstanceOf[Terminal] && rightExpr.isInstanceOf[Terminal])

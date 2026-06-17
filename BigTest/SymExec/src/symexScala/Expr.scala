@@ -65,6 +65,14 @@ case class SymOp(atype: VType, op: ArithmeticOp) /*extends Terminal*/ {
         throw new NotSupportedRightNow("String Operator not supported")
     }
   }
+  // SMT-LIB operator symbol. Integer division in SMT-LIB is `div` (`/` denotes
+  // real division and is rejected by cvc5 in the integer/string logic we emit).
+  def toSMT: String = {
+    op match {
+      case Division => "div"
+      case _        => toString
+    }
+  }
 }
 
 case class SymStringOp(atype: VType, op: StringOp) /*extends Terminal*/ {
@@ -222,7 +230,7 @@ case class NonTerminal(left: Expr, middle: SymOp, right: Expr) extends Expr {
 
   override def toZ3Query(initials: Z3QueryState): String = {
     // left.toString + " " + op.toString + " " + right.toString
-    s"""(${op.toString}  ${leftExpr.toZ3Query(initials)} ${rightExpr
+    s"""(${op.toSMT}  ${leftExpr.toZ3Query(initials)} ${rightExpr
       .toZ3Query(initials)} )"""
     //"FIX NON TERMINAL Z3 QUERY"
 

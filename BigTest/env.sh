@@ -15,3 +15,9 @@ export PATH=$PATH:$dependencies # join my own path
 export CLASSPATH=$CLASSPATH:$JUINT_HOME/ # junit
 export CLASSPATH=$CLASSPATH:$dependencies/jdt2/* #decompilers
 export CLASSPATH=$CLASSPATH:$SPARK_HOME/jars/*
+
+# Modernization hooks (see docs/MODERNIZATION.md):
+#   BIGTEST_SOLVER     full solver invocation; SMT2 fed on stdin. Default: cvc5
+#                      e.g. export BIGTEST_SOLVER="cvc5 --strings-exp --lang smt2"
+#                           export BIGTEST_SOLVER="z3 -in -smt2"
+#   BIGTEST_DECOMPILER jad (default) | cfr (experimental, pure-JVM decompiler)

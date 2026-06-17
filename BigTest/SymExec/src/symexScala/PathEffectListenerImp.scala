@@ -345,7 +345,7 @@ class PathEffectListenerImp extends PathEffectListener {
     val argsInfo: Vector[Pair[String, String]] = super.getArgsInfo()
 
     println("\u001B[32m" + "PathEffectListenerImp: " + udfFileName + "\u001B[0m");
-    println("\u001B[32m" + "Java path: " + "/mnt/ssd/thaddywu/rinput/BigTest/Rundir/" + udfFileName + ".java" + "\u001B[0m");
+    println("\u001B[32m" + "Java path: " + System.getenv("BigTest") + "/Rundir/" + udfFileName + ".java" + "\u001B[0m");
     println("\u001B[32m" + "#paths:" + pathVector.size + " #args:" + argsInfo.size + "\u001B[0m");
     // @thaddywu: print udf symex result
     for (i <- 0 until pathVector.size)
@@ -405,7 +405,7 @@ class PathEffectListenerImp extends PathEffectListener {
 
     // println("------>" + pathVector.size + " " + argsInfo.size)
     println("\u001B[32m" + "PathEffectListenerImp: " + udfFileName + "\u001B[0m");
-    println("\u001B[32m" + "Java path: " + "/mnt/ssd/thaddywu/rinput/BigTest/Rundir/" + udfFileName + ".java" + "\u001B[0m");
+    println("\u001B[32m" + "Java path: " + System.getenv("BigTest") + "/Rundir/" + udfFileName + ".java" + "\u001B[0m");
     println("\u001B[32m" + "#paths:" + pathVector.size + " #args:" + argsInfo.size + "\u001B[0m");
     // @thaddywu: print udf symex result
     for (i <- 0 until pathVector.size)
